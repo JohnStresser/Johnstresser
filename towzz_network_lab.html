@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOWZZ Network Lab</title>
+  <style>
+    :root { color-scheme: dark; --green:#00e676; --muted:#91a49a; --panel:#101813; }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; padding:28px 16px;
+      background:radial-gradient(circle at top,#13251a 0,#080d0a 48%,#050706 100%);
+      color:#ecf5ef; font:15px/1.5 Arial, sans-serif;
+    }
+    .wrap { width:min(850px,100%); margin:auto; }
+    header { text-align:center; margin-bottom:24px; }
+    .logo { color:var(--green); font-size:13px; letter-spacing:4px; font-weight:bold; }
+    h1 { margin:8px 0 4px; font-size:clamp(28px,5vw,42px); letter-spacing:1px; }
+    header p { color:var(--muted); margin:0; }
+    .panel {
+      background:rgba(16,24,19,.94); border:1px solid #294333;
+      border-radius:16px; padding:22px; margin:16px 0;
+      box-shadow:0 14px 40px #0008;
+    }
+    h2 { margin:0 0 16px; font-size:18px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    label { display:block; color:#c7d8cd; font-size:13px; margin-bottom:7px; }
+    input,select {
+      width:100%; background:#080e0a; border:1px solid #385543; border-radius:9px;
+      padding:12px; color:#f2fff6; outline:none; font-size:15px;
+    }
+    input:focus,select:focus { border-color:var(--green); box-shadow:0 0 0 2px #00e67622; }
+    .hint { color:var(--muted); font-size:12px; margin-top:6px; }
+    .mode {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:13px 14px; border:1px solid #294333; border-radius:10px; background:#0a120d;
+    }
+    .pill { color:var(--green); border:1px solid #167b45; border-radius:30px; padding:4px 10px; font-size:12px; }
+    .actions { display:flex; gap:12px; margin-top:18px; }
+    button {
+      flex:1; border:0; border-radius:10px; padding:13px 18px; font-weight:bold;
+      font-size:15px; cursor:pointer;
+    }
+    #start { background:var(--green); color:#041108; }
+    #stop { background:#26332b; color:#e9f3ec; border:1px solid #405347; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
+    .stat { background:#080e0a; border:1px solid #263b2d; border-radius:10px; padding:12px; }
+    .stat span { display:block; color:var(--muted); font-size:12px; }
+    .stat strong { display:block; color:var(--green); font-size:22px; margin-top:3px; }
+    .bar { height:9px; background:#26352b; border-radius:20px; overflow:hidden; margin-top:14px; }
+    .bar div { width:0%; height:100%; background:linear-gradient(90deg,#00a84f,var(--green)); transition:width .2s; }
+    #log {
+      min-height:110px; max-height:220px; overflow:auto; background:#050906;
+      border:1px solid #263b2d; border-radius:10px; padding:12px;
+      color:#a9c7b3; font:12px/1.7 Consolas,monospace; white-space:pre-wrap;
+    }
+    .notice { color:#b9cbbf; font-size:13px; border-left:3px solid var(--green); padding:9px 12px; background:#0a140e; border-radius:4px; }
+    footer { color:#718378; text-align:center; font-size:12px; padding:10px; }
+    @media(max-width:560px) { .grid { grid-template-columns:1fr; } .stats { grid-template-columns:1fr; } .actions { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="logo">TOWZZ</div>
+      <h1>NETWORK LAB</h1>
+      <p>Safe network diagnostics simulator</p>
+    </header>
+
+    <section class="panel">
+      <h2>Diagnostic configuration</h2>
+      <div class="grid">
+        <div>
+          <label for="ip">IPv4 address (display only)</label>
+          <input id="ip" type="text" placeholder="Example: 192.168.1.1" value="192.168.1.1" inputmode="decimal">
+          <div class="hint">The address is not contacted or scanned.</div>
+        </div>
+        <div>
+          <label for="port">Port (display only)</label>
+          <input id="port" type="number" min="1" max="65535" value="443">
+          <div class="hint">Valid port range: 1–65535.</div>
+        </div>
+        <div>
+          <label for="users">Simulated concurrent users</label>
+          <select id="users">
+            <option value="1">1 simulated user</option>
+            <option value="2">2 simulated users</option>
+            <option value="3" selected>3 simulated users</option>
+            <option value="4">4 simulated users</option>
+            <option value="5">5 simulated users</option>
+          </select>
+        </div>
+        <div>
+          <label for="method">Diagnostic mode</label>
+          <select id="method">
+            <option value="http">HTTP-free local simulation</option>
+            <option value="udp-free" selected>UDP-FREE diagnostic simulation</option>
+          </select>
+        </div>
+      </div>
+      <div class="mode" style="margin-top:16px">
+        <div><strong>Network traffic</strong><div class="hint">No packets, requests, or traffic are sent.</div></div>
+        <span class="pill">SIMULATION ONLY</span>
+      </div>
+      <div class="actions">
+        <button id="start">START SIMULATION</button>
+        <button id="stop" disabled>STOP</button>
+      </div>
+      <div class="bar"><div id="progress"></div></div>
+      <div class="stats">
+        <div class="stat"><span>Simulation status</span><strong id="status">IDLE</strong></div>
+        <div class="stat"><span>Simulated users</span><strong id="count">0 / 3</strong></div>
+        <div class="stat"><span>Elapsed time</span><strong id="elapsed">0s</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Activity log</h2>
+      <div id="log" aria-live="polite">[SYSTEM] TOWZZ Network Lab ready.
+[INFO] This page performs local-only simulation. No network traffic will be generated.</div>
+    </section>
+
+    <p class="notice"><strong>Safety note:</strong> This page is a visual simulator for learning and interface testing. It does not test, stress, scan, or disrupt any device or network.</p>
+    <footer>TOWZZ NETWORK LAB · LOCAL-ONLY SIMULATION</footer>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let timer = null, startedAt = 0, tick = 0, running = false;
+    function log(message) {
+      const box = $('log');
+      box.textContent += '\n' + new Date().toLocaleTimeString() + '  ' + message;
+      box.scrollTop = box.scrollHeight;
+    }
+    function validIPv4(value) {
+      const parts = value.trim().split('.');
+      return parts.length === 4 && parts.every(p => /^\d{1,3}$/.test(p) && Number(p) >= 0 && Number(p) <= 255);
+    }
+    function start() {
+      if (running) return;
+      const ip = $('ip').value.trim();
+      const port = Number($('port').value);
+      if (!validIPv4(ip)) { log('[ERROR] Enter a valid IPv4 address format.'); $('ip').focus(); return; }
+      if (!Number.isInteger(port) || port < 1 || port > 65535) { log('[ERROR] Enter a port from 1 to 65535.'); $('port').focus(); return; }
+      running = true; tick = 0; startedAt = Date.now();
+      const users = Number($('users').value);
+      $('status').textContent = 'RUNNING';
+      $('count').textContent = '0 / ' + users;
+      $('elapsed').textContent = '0s';
+      $('progress').style.width = '0%';
+      $('start').disabled = true; $('stop').disabled = false;
+      log('[START] Local simulation started for ' + ip + ':' + port + '.');
+      log('[MODE] ' + $('method').selectedOptions[0].text + ' · ' + users + ' simulated users.');
+      timer = setInterval(() => {
+        tick++;
+        const done = Math.min(tick, users);
+        $('count').textContent = done + ' / ' + users;
+        $('elapsed').textContent = Math.floor((Date.now() - startedAt) / 1000) + 's';
+        $('progress').style.width = Math.min(100, tick / (users + 5) * 100) + '%';
+        if (tick <= users) log('[SIM] Simulated user ' + tick + ' completed a local demo step.');
+        if (tick >= users + 5) finish();
+      }, 700);
+    }
+    function finish() {
+      if (timer) clearInterval(timer);
+      timer = null; running = false;
+      $('status').textContent = 'COMPLETE';
+      $('progress').style.width = '100%';
+      $('start').disabled = false; $('stop').disabled = true;
+      log('[DONE] Simulation completed. No network traffic was sent.');
+    }
+    function stop() {
+      if (!running) return;
+      clearInterval(timer); timer = null; running = false;
+      $('status').textContent = 'STOPPED';
+      $('start').disabled = false; $('stop').disabled = true;
+      log('[STOP] Simulation stopped by user. No network traffic was sent.');
+    }
+    $('start').addEventListener('click', start);
+    $('stop').addEventListener('click', stop);
+  </script>
+</body>
+</html>
