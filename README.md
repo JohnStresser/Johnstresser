@@ -1,5 +1,7 @@
 ## Hi there 👋
 
+
+its just a booster for my playstation people
 <!--
 **JohnStresser/Johnstresser** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
